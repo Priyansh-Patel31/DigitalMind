@@ -22,12 +22,12 @@ public class UserService {
         if(registerUserRequest.username().isBlank()){
             throw new IllegalArgumentException("Username cannot be blank");
         }
-        if(userRepository.existsByUsernameIgnoreCase(registerUserRequest.username())){
+        if(userRepository.existsByUsername(registerUserRequest.username())){
             throw new IllegalArgumentException("Username already exists");
         }
 
         User user = new User();
-        user.setUsername(registerUserRequest.username().toLowerCase());
+        user.setUsername(registerUserRequest.username());
         user.setEmail(registerUserRequest.email());
         user.setPassword(passwordEncoder.encode(registerUserRequest.password()));
         user.setRole(Role.USER);

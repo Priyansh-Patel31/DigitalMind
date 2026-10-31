@@ -2,7 +2,7 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:DigitalMemoryMind}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:docmind}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
 
@@ -31,7 +31,7 @@ spring:
       pgvector:
         index-type: HNSW
         distance-type: COSINE_DISTANCE
-        dimensions: 768
+        dimensions: 768              # nomic-embed-text produces 768-dim vectors
         table-name: vector_store
         schema-name: public
         initialize-schema: true
@@ -39,6 +39,7 @@ spring:
     multipart:
       max-file-size: 25MB
       max-request-size: 50MB
+
 
 
 

@@ -1,104 +1,161 @@
-# DigitalMind (DocMind) - AI-Powered RAG Document Intelligence Platform
+# DocMind – RAG‑Based Document Intelligence Platform
 
-**DigitalMind** is an enterprise-grade document intelligence platform powered by Retrieval-Augmented Generation (RAG). It enables users to upload, process, search, and converse with documents through high-accuracy semantic embeddings and local LLMs.
+## Overview
+DocMind is a full‑stack application that provides AI‑driven search and question‑answering over a corpus of user‑uploaded documents. It combines:
 
----
+| Layer | Technology |
+|-------|------------|
+| **Backend** | Spring Boot 4.1, Spring AI (Ollama, PGVector), Spring Security (JWT), PostgreSQL, Docker |
+| **Frontend** | React + TypeScript, Vite, Tailwind CSS v4 |
+| **RAG** | Vector store (PGVector), document ingestion via Tika & PDF readers, search‑advisor tool |
 
-## 🌟 Key Features
-
-- **Document Ingestion & Processing**: Intelligent extraction, chunking, and metadata parsing for PDFs and text documents.
-- **Vector Search with pgvector**: High-performance semantic similarity search using PostgreSQL with the `pgvector` extension and HNSW indexing.
-- **Local AI & Privacy First**: Powered by Spring AI with local Ollama models (`llama3.1` for chat and `nomic-embed-text` for embeddings) — zero data leaks to third parties.
-- **Chat Memory & Multi-turn Conversations**: Persistent chat history and conversational context stored in PostgreSQL with conversation isolation.
-- **Secure Authentication**: JWT-based stateless authentication and user-specific document isolation.
-- **Modern Web Interface**: Responsive, high-performance UI built with React 19, TypeScript, Tailwind CSS, and Framer Motion.
+The backend exposes a REST API (`/api/**`) that the React frontend consumes. Docker Compose bundles the services for easy local development.
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## Architecture Diagrams
+- **Chat Memory DB Architecture** – see [CHAT_MEMORY_DB_ARCHITECTURE.md](file:///Users/patelpriyansh/Desktop/PROJECTS/Internship%20resume%20for%20startup/docmind-rag-based-project-main%202/docs/CHAT_MEMORY_DB_ARCHITECTURE.md)
+- **User Document Isolation Analysis** – see [USER_DOCUMENT_ISOLATION_ANALYSIS.md](file:///Users/patelpriyansh/Desktop/PROJECTS/Internship%20resume%20for%20startup/docmind-rag-based-project-main%202/docs/USER_DOCUMENT_ISOLATION_ANALYSIS.md)
+
+---
+
+## Prerequisites
+
+| Item | Minimum version |
+|------|-----------------|
+| **JDK** | 21 |
+| **Maven** | 3.9+ |
+| **Node.js** | 20.x |
+| **npm** | 10.x |
+| **Docker & Docker‑Compose** | 2.20+ |
+| **Ollama** (for local LLM) – optional if you use remote model | see Ollama docs |
+
+---
+
+## Backend Setup
+
+1. **Clone the repo** (already done).
+2. **Configure environment** – copy `src/main/resources/application-dev.yml` to `application.yml` if you want to customise.
+3. **Start PostgreSQL & Ollama** (Docker Compose will do this automatically – see below).
+4. **Build & run**
+
+```bash
+# From the project root
+mvn clean install          # compile, test, package
+java -jar target/docmind-backend-0.0.1-SNAPSHOT.jar   # runs on http://localhost:8081
+```
+
+The backend runs on **Port 8081** and expects a PostgreSQL DB named `docmind` (see `docker-compose.yml`).
+
+### Available API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST /api/auth/register` | Register a new user (email + password). |
+| `POST /api/auth/login` | Obtain JWT token. |
+| `POST /api/documents` | Upload a document (PDF/DOCX). |
+| `GET /api/documents/{id}` | Retrieve document metadata. |
+| `POST /api/chat` | Ask a question; returns streaming answer with citations. |
+| `GET /api/chat/history` | List past conversations. |
+
+---
+
+## Frontend Setup
+
+```bash
+cd frontend/docmind-frontend
+npm install
+npm run dev          # http://localhost:3000
+npm run build        # production build → dist/
+```
+
+The dev server proxies `/api/**` to the backend automatically (see Vite config).
+
+---
+
+## Running the Whole Stack with Docker Compose
+
+```bash
+docker compose up -d      # starts PostgreSQL, Ollama, backend, and (optionally) nginx proxy
+```
+
+* `docker-compose.yml` defines services: `postgres`, `ollama`, `backend`, `frontend`.
+* **Stop** with `docker compose down`.
+
+---
+
+## Configuration
+
+Key configuration files:
+
+| File | Purpose |
+|------|---------|
+| `src/main/resources/application-dev.yml` | Development‑time Spring properties (DB URL, JWT secret, AI model config). |
+| `frontend/docmind-frontend/vite.config.ts` | Vite dev server & build settings. |
+| `docker-compose.yml` | Service orchestration (ports, volumes, environment). |
+| `prompt.md` (in `docs/`) | The system prompt used for the LLM. |
+| `FRONTEND_BUILD_PROMPT.md` | Guidance for building the frontend UI. |
+
+---
+
+## Testing
 
 ### Backend
-- **Framework**: Spring Boot 3 / 4.x (Java 21)
-- **AI / LLM Integration**: Spring AI (Ollama starter, Vector Store starter)
-- **Database**: PostgreSQL 16 with `pgvector` extension
-- **Security**: Spring Security 6 with JWT authentication
-- **Persistence**: Spring Data JPA & Hibernate
+
+```bash
+mvn test          # runs JUnit tests (including integration tests with Testcontainers)
+```
 
 ### Frontend
-- **Framework**: React 19 + TypeScript + Vite
-- **Styling**: Tailwind CSS + Lucide Icons + Framer Motion
-- **State Management**: Zustand
-- **HTTP Client**: Axios with automatic JWT injection
+
+```bash
+npm run test      # jest / vitest tests (if present)
+```
 
 ---
 
-## 🚀 Getting Started
+## Documentation
 
-### Prerequisites
-- **Java 21** or later
-- **Node.js 18+** & npm
-- **Docker & Docker Compose**
-- **Ollama** installed locally (`ollama pull llama3.1`, `ollama pull nomic-embed-text`)
+Additional useful markdown files are located under `docs/`:
+
+- `CHAT_MEMORY_DB_ARCHITECTURE.md` – DB schema for chat memory.
+- `USER_DOCUMENT_ISOLATION_ANALYSIS.md` – security considerations for multi‑tenant document handling.
+- `FRONTEND_BUILD_PROMPT.md` – design notes for the UI.
+- `prompt.md` – the LLM prompt used by the search‑advisor tool.
 
 ---
 
-### 1. Database Setup (Docker)
+## Contributing
 
-Start the PostgreSQL instance with `pgvector`:
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/xyz`).
+3. Follow the existing code style (Java 21, Lombok, Spring conventions; React/TS linting).
+4. Submit a Pull Request with a clear description and any required migrations.
+
+---
+
+## License
+
+This project is provided under the **MIT License** (see `LICENSE` file).
+
+---
+
+## Quick Start Summary
+
+```bash
+# Backend
+mvn clean install
+java -jar target/docmind-backend-0.0.1-SNAPSHOT.jar
+
+# Frontend
+cd frontend/docmind-frontend
+npm install && npm run dev
+```
+
+Or, run everything with Docker Compose:
 
 ```bash
 docker compose up -d
 ```
 
-This starts PostgreSQL on port `5434` (mapped to internal `5432`) and automatically initializes the `vector` and `uuid-ossp` extensions.
-
----
-
-### 2. Configure Environment
-
-Copy `.env.example` to `.env` if custom variables are needed:
-
-```bash
-cp .env.example .env
-```
-
-Default development properties are configured in `src/main/resources/application-dev.yml`.
-
----
-
-### 3. Backend Setup
-
-Run the Spring Boot application using Maven:
-
-```bash
-./mvnw spring-boot:run
-```
-
-The backend server will start on `http://localhost:8081`.
-
----
-
-### 4. Frontend Setup
-
-Navigate to the frontend directory, install dependencies, and launch the dev server:
-
-```bash
-cd frontend/docmind-frontend
-npm install
-npm run dev
-```
-
-The frontend will be available at `http://localhost:3000` with requests to `/api` proxied to the backend.
-
----
-
-## 🔒 Security & Privacy
-
-- All sensitive environment files (`.env`, `.env.*`) and credentials (`*.pem`, `*.key`, etc.) are ignored by Git.
-- Local LLM inference ensures document contents and queries never leave your private infrastructure.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
+Open your browser at **http://localhost:3000** and start uploading documents!

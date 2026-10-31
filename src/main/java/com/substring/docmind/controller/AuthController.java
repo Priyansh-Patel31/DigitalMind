@@ -42,11 +42,11 @@ public class AuthController {
         //TODO
         //authenticate and return the token and user
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                loginRequest.username().toLowerCase(),
+                loginRequest.username(),
                 loginRequest.password()
         );
         Authentication authenticated = authenticationManager.authenticate(authentication);
-        User user = userRepository.findByUsernameIgnoreCase(loginRequest.username()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsername(loginRequest.username()).orElseThrow(() -> new RuntimeException("User not found"));
 
         String token = jwtService.generateToken(new CustomUserDetail(user));
         var response = new LoginResponse(token, new UserDto(user.getId(), user.getUsername(), user.getEmail(), user.getRole()));
